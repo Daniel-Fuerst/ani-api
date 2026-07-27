@@ -5,4 +5,6 @@ Gem::Specification.new do |s|
   s.authors       = ["Daniel Fürst"]
   s.email         = "daniel@fuerst.priv.at"
   s.files         = ["lib/ani-api.rb"]
+  s.homepage      = "https://github.com/Daniel-Fuerst/ani-api"
+  s.license       = "GPL-3.0"
 end
