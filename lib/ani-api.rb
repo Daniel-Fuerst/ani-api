@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 require 'net/http'
 require 'json'
 
@@ -18,6 +17,8 @@ class AniApi
           duration
           chapters
           volumes
+          genres
+          averageScore
           title {
             romaji
             english
@@ -40,7 +41,7 @@ class AniApi
     response = make_request(query, { id: id })
     @rate_limit = response['X-RateLimit-Remaining'].to_i
 
-    JSON.parse(response.body)["data"]["Media"]
+    JSON.parse(response.body)["data"]["Media"].compact
   end
 
   def self.search(title)
