@@ -3,48 +3,80 @@ require 'net/http'
 require 'json'
 
 class AniApi
-  @@uri = URI("https://graphql.anilist.co/")
+  API_URI = URI("https://graphql.anilist.co/").freeze
+  @rate_limit = 90
 
-  MediaResult = Struct.new(:title, :type)
-
+  attr_reader :rate_limit
   def self.media(id)
     query = '''
       query ($id: Int) {
         Media (id: $id) {
           id
           type
+          format
+          episodes
+          duration
+          chapters
+          volumes
           title {
             romaji
             english
             native
           }
+          seasonYear
+          startDate {
+            day, month, year
+          }
+          endDate {
+            day, month, year
+          }
         }
       }
     '''
 
+
+    response = make_request(query, { id: id })
+    @rate_limit = response['X-RateLimit-Remaining'].to_i
+
+    JSON.parse(response.body)["data"]["Media"]
+  end
+
+  def self.search(title)
+    query = '''
+      query ($search: String) {
+        Page (perPage: 5) {
+          media (search: $search) {
+            id
+            type
+          }
+        }
+      }
+    '''
+
+    response = make_request(query, { search: title })
+    data = JSON.parse(response.body)["data"]["Page"]["media"]
+    @rate_limit = response['X-RateLimit-Remaining'].to_i
+    data.map { |entry| entry }
+  end
+
+  private
+
+  def self.make_request(query, vars)
     payload = {
       query: query,
-      variables: { id: id }
+      variables: vars
     }
 
-    http = Net::HTTP.new(@@uri.host, @@uri.port)
+    http = Net::HTTP.new(API_URI.host, API_URI.port)
     http.use_ssl = true
 
-    request = Net::HTTP::Post.new(@@uri.path, {'Content-Type' => 'application/json'})
+    request = Net::HTTP::Post.new(API_URI.path, {'Content-Type' => 'application/json'})
     request.body = payload.to_json
 
-    response = http.request(request).body
-    data = JSON.parse(response)["data"]["Media"]
+    http.request(request)
+  end
 
-    # ==== Fetch Title ====
-    en = data["title"]["english"]
-    jp = data["title"]["english"]
-    title = [en, jp]
-
-    type = data["type"]
-
-    MediaResult.new(title, type)
+  def self.rate_limit_remaining
+    @rate_limit
   end
 end
-
-puts AniApi.media(201514).title.en
