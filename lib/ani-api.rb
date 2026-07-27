@@ -8,7 +8,7 @@ class AniApi
 
   attr_reader :rate_limit
   def self.media(id)
-    query = '''
+    query = <<~GRAPHQL
       query ($id: Int) {
         Media (id: $id) {
           id
@@ -32,8 +32,7 @@ class AniApi
           }
         }
       }
-    '''
-
+    GRAPHQL
 
     response = make_request(query, { id: id })
     @rate_limit = response['X-RateLimit-Remaining'].to_i
@@ -42,7 +41,7 @@ class AniApi
   end
 
   def self.search(title)
-    query = '''
+    query = <<~GRAPHQL
       query ($search: String) {
         Page (perPage: 5) {
           media (search: $search) {
@@ -51,11 +50,12 @@ class AniApi
           }
         }
       }
-    '''
+    GRAPHQL
 
     response = make_request(query, { search: title })
     data = JSON.parse(response.body)["data"]["Page"]["media"]
     @rate_limit = response['X-RateLimit-Remaining'].to_i
+
     data.map { |entry| entry }
   end
 
