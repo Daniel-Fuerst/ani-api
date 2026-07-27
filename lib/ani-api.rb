@@ -24,6 +24,7 @@ class AniApi
             english
             native
           }
+          description
           seasonYear
           startDate {
             day, month, year
