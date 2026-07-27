@@ -30,6 +30,9 @@ class AniApi
           endDate {
             day, month, year
           }
+          coverImage {
+            large, medium          
+          }         
         }
       }
     GRAPHQL
